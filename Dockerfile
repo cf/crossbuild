@@ -1,4 +1,4 @@
-FROM buildpack-deps:stretch-curl
+FROM buildpack-deps:bullseye-curl
 MAINTAINER Manfred Touron <m@42.am> (https://github.com/moul)
 
 # Install deps
@@ -136,8 +136,18 @@ RUN mkdir -p /usr/x86_64-linux-gnu;                                             
 
 ENV LD_LIBRARY_PATH /usr/osxcross/lib:$LD_LIBRARY_PATH
 
+
 # Image metadata
-ENTRYPOINT ["/usr/bin/crossbuild"]
-CMD ["/bin/bash"]
 WORKDIR /workdir
 COPY ./assets/crossbuild /usr/bin/crossbuild
+# start custom stuff
+RUN wget https://services.gradle.org/distributions/gradle-6.5-bin.zip -P /tmp && unzip -d /opt/gradle /tmp/gradle-6.5-bin.zip
+RUN wget https://download.java.net/java/GA/jdk13.0.2/d4173c853231432d94f001e99d882ca7/8/GPL/openjdk-13.0.2_linux-x64_bin.tar.gz && tar xvf openjdk-13.0.2_linux-x64_bin.tar.gz && rm -f openjdk-13.0.2_linux-x64_bin.tar.gz && mv jdk-13*/ /opt/jdk13
+ENV PATH="/opt/gradle/gradle-6.5/bin:/opt/jdk13/bin:${PATH}"
+ENV JAVA_HOME="/opt/jdk13"
+RUN apt-get update && apt-get install gcc-9 g++-9 && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9
+
+
+
+ENTRYPOINT ["/usr/bin/crossbuild"]
+CMD ["/bin/bash"]
